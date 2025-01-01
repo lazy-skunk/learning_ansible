@@ -1,0 +1,61 @@
+services:
+  ansible_control_node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/learning_ansible
+      - /learning_ansible/venv  # Use an anonymous volume to prevent overwriting the directory.
+      - ~/.gitconfig:/root/.gitconfig
+      - ~/.gitconfig:/home/ansible/.gitconfig
+    container_name: ansible_control_node
+    networks:
+      ansible_network:
+        ipv4_address: 192.168.1.100
+        aliases:
+          - control_node
+    stdin_open: true
+    tty: true
+    ports:
+      - "2222:22"
+
+  ansible_managed_node_1:
+    build:
+      context: . 
+      dockerfile: Dockerfile
+    volumes:
+      - /learning_ansible/venv
+    container_name: ansible_managed_node_1
+    networks:
+      ansible_network:
+        ipv4_address: 192.168.1.101
+        aliases:
+          - managed_node_1
+    stdin_open: true
+    tty: true
+    ports:
+      - "2223:22"
+
+  ansible_managed_node_2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - /learning_ansible/venv
+    container_name: ansible_managed_node_2
+    networks:
+      ansible_network:
+        ipv4_address: 192.168.1.102
+        aliases:
+          - managed_node_2
+    stdin_open: true
+    tty: true
+    ports:
+      - "2224:22"
+
+networks:
+  ansible_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
