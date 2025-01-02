@@ -1,45 +1,35 @@
-FROM ubuntu:latest
+FROM rockylinux:9.3
 
 ENV TZ=Asia/Tokyo
 
-RUN apt-get update \
- && apt-get install -y \
-    git \
-    ssh \
+RUN yum update -y \
+ && yum install -y \
+    sudo \
+    procps \
+    net-tools \
     openssh-server \
-    locales \
+    openssh-clients \
+    which \
+    git \
     python3 \
     python3-pip \
-    python3.12-venv \
-    sudo \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
-
-RUN locale-gen en_US.UTF-8 && \
-    update-locale LANG=en_US.UTF-8
-ENV LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8
+ && yum clean all \
+ && rm -rf /var/cache/yum
 
 RUN useradd -m -s /bin/bash ansible \
  && echo "ansible:password" | chpasswd \
- && usermod -aG sudo ansible
+ && usermod -aG wheel ansible
 
-RUN mkdir -p /var/run/sshd \
- && mkdir -p /home/ansible/.ssh \
- && chmod 700 /home/ansible/.ssh \
- && chown ansible:ansible /home/ansible/.ssh
+RUN ssh-keygen -A
 
 RUN mkdir -p /learning_ansible
+WORKDIR /learning_ansible
 COPY . /learning_ansible/
 
 RUN python3 -m venv /learning_ansible/venv \
  && /learning_ansible/venv/bin/pip install --upgrade pip \
- && /learning_ansible/venv/bin/pip install -r /learning_ansible/requirements.txt
-RUN echo "source /learning_ansible/venv/bin/activate" >> /root/.bashrc \
- && echo "source /learning_ansible/venv/bin/activate" >> /home/ansible/.bashrc \
- && chown ansible:ansible /home/ansible/.bashrc
-
-WORKDIR /learning_ansible
+ && /learning_ansible/venv/bin/pip install -r /learning_ansible/requirements.txt \
+ && echo "source /learning_ansible/venv/bin/activate" >> /home/ansible/.bashrc
 
 EXPOSE 22
 
